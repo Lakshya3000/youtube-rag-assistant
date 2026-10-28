@@ -1,114 +1,168 @@
 # YouTube RAG Assistant 🎬
 
-A Streamlit application that lets users ask questions about YouTube video transcripts. It uses **LangChain**, **Google Gemini**, **Gemini embeddings**, and **FAISS** for Retrieval-Augmented Generation (RAG). The application displays retrieved source passages so users can verify answers against the transcript.
+**Ask questions about YouTube videos using Retrieval-Augmented Generation (RAG).**
 
-## Features
+🔴 **Live Demo:** https://youtube-rag-assistant-p8he.onrender.com  
+💻 **GitHub Repository:** https://github.com/Lakshya3000/youtube-rag-assistant
 
-- Fetch captions from a YouTube URL or video ID when network access permits.
-- Upload `.txt`, `.md`, `.srt`, or `.vtt` transcript files, or paste transcript text.
-- Split transcript text into overlapping chunks and embed them in batches.
-- Cache FAISS indexes by transcript content, embedding model, chunk size, and overlap.
-- Use **Maximal Marginal Relevance (MMR)** to retrieve relevant chunks while reducing redundant context.
-- Configure the number of retrieved chunks and other retrieval settings.
-- Ask questions through a chat interface and inspect the source chunks used to generate answers.
-- Configure Gemini chat and embedding model names through environment variables or the sidebar.
-- Run locally or with Docker and Docker Compose.
-- Support health checks, a non-root container user, and documented deployment options.
+A Streamlit application that lets users ask questions about YouTube video transcripts. It uses **LangChain, Google Gemini, Gemini embeddings, FAISS, and Maximal Marginal Relevance (MMR)** to retrieve relevant transcript passages and generate grounded answers with inspectable sources.
 
-## Architecture
+> **Note:** Direct YouTube caption fetching may fail on hosted infrastructure because YouTube can block cloud-hosting IP addresses. You can upload a transcript file or paste transcript text as an alternative.
+
+## ✨ Features
+
+- **YouTube transcript input:** Fetch captions using a YouTube URL or video ID when network access permits.
+- **Multiple transcript options:** Upload `.txt`, `.md`, `.srt`, or `.vtt` files, or paste transcript text.
+- **Retrieval-Augmented Generation:** Generate answers grounded in transcript content.
+- **Gemini integration:** Use Google Gemini for embeddings and answer generation.
+- **FAISS vector search:** Store and retrieve transcript embeddings efficiently.
+- **MMR retrieval:** Balance relevance and diversity to reduce repetitive context.
+- **Configurable retrieval:** Adjust chunk size, overlap, embedding model, chat model, and the number of retrieved chunks.
+- **Index caching:** Reuse compatible indexes to avoid unnecessary embedding API calls.
+- **Source inspection:** Expand the sources used to inspect the retrieved transcript passages.
+- **Docker support:** Run the application using Docker or Docker Compose.
+
+## 🖥️ Live Demo
+
+Try the deployed application here:
+
+**[Open YouTube RAG Assistant](https://youtube-rag-assistant-p8he.onrender.com)**
+
+To test it:
+1. Paste a transcript or upload a transcript file.
+2. Click **Use pasted transcript** or submit the uploaded transcript.
+3. Click **Build / load searchable index**.
+4. Ask a question about the video.
+5. Expand **Sources used** to inspect the supporting passages.
+
+**Deployment note:** Render's free instance may spin down when inactive, so the first request after inactivity can take longer. Local FAISS indexes may also need to be rebuilt if their files are lost after a restart or redeployment.
+
+## 🏗️ Architecture
 
 ```text
-YouTube URL / transcript upload / pasted text
+YouTube URL / Transcript Upload / Pasted Text
                     |
                     v
-              Transcript text
+              Transcript Text
                     |
                     v
        RecursiveCharacterTextSplitter
                     |
                     v
-       Gemini embedding model (batched)
+          Gemini Embedding Model
                     |
                     v
-           Persistent FAISS index
+               FAISS Index
                     |
-Question ---> MMR retriever
-                    |
-          Candidate chunks (fetch_k)
+Question ----------> MMR Retriever
                     |
                     v
-     Relevant, less-redundant chunks (k)
+         Relevant Transcript Chunks
                     |
                     v
-        Context + question prompt
+            Context + Question
                     |
                     v
-            Gemini chat model
+            Gemini Chat Model
                     |
                     v
-       Answer + inspectable sources
+          Answer + Source Passages
 ```
 
-## 1. Requirements
+## 🛠️ Tech Stack
 
-- Python 3.11 recommended
-- A Gemini API key from Google AI Studio
-- Internet access to call the Gemini API
-- Docker Desktop (optional, for container deployment)
+| Technology | Purpose |
+|---|---|
+| Python 3.11 | Application development |
+| Streamlit | Interactive web interface |
+| LangChain | RAG pipeline and retrieval |
+| Google Gemini | Answer generation |
+| Gemini Embeddings | Convert text into vector representations |
+| FAISS | Vector storage and similarity search |
+| MMR | Relevant and diverse chunk retrieval |
+| Docker | Containerization |
+| Docker Compose | Local container orchestration |
+| GitHub | Version control and source code hosting |
+| Render | Cloud deployment |
 
-YouTube caption fetching may fail when YouTube blocks a network/IP or when captions are disabled. This is not necessarily an application bug. Use the transcript upload or paste options as a fallback.
+## 📋 Requirements
 
-## 2. Run locally in VS Code (Conda `aiml-env`)
+- Python 3.11
+- Google Gemini API key
+- Internet connection for Gemini API requests
+- Docker Desktop (optional, for containerized execution)
 
-Open PowerShell in the project directory:
+## 🚀 Run Locally
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Lakshya3000/youtube-rag-assistant.git
+cd youtube-rag-assistant
+```
+
+### 2. Activate your Python environment
+
+For Conda:
 
 ```powershell
 conda activate aiml-env
-python --version
+```
+
+Install the dependencies:
+
+```powershell
 python -m pip install -r requirements.txt
 python -m pip check
 ```
 
-Create `.env` from the example:
+### 3. Configure environment variables
+
+Create your local `.env` file from the example:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Edit `.env` and add your real API key. Never commit `.env` to Git.
+Open `.env` and configure your API key and model names:
 
 ```env
-GOOGLE_API_KEY=your_real_key_here
+GOOGLE_API_KEY=your_real_api_key_here
 GEMINI_EMBEDDING_MODEL=gemini-embedding-001
 GEMINI_CHAT_MODEL=gemini-3.5-flash-lite
 RAG_INDEX_DIR=data/indexes
 ```
 
-Model availability can vary by API account and region. If `gemini-3.5-flash-lite` is unavailable to your API key, configure `GEMINI_CHAT_MODEL` with a currently supported model.
+**Security:** Replace the placeholder with your own API key locally. Never commit `.env` or expose your API key in source code, screenshots, or public repositories.
 
-Start the application:
+Model availability may vary by API account and region. Use a currently supported model if your configured model is unavailable.
+
+### 4. Start the application
 
 ```powershell
 streamlit run app.py
 ```
 
-Open the local URL printed in the terminal, normally `http://localhost:8501`.
+Open the URL shown in your terminal, normally:
 
-### Typical workflow
+http://localhost:8501
+
+### 5. Use the application
 
 1. Fetch captions, upload a transcript, or paste transcript text.
-2. Configure the chunk settings and number of retrieved chunks in the sidebar.
+2. Adjust chunk settings and the number of retrieved chunks if required.
 3. Click **Build / load searchable index**.
-4. Wait for indexing to complete. A cached index is reused when the transcript and indexing settings match.
-5. Ask questions and expand **Sources used** to inspect the supporting passages.
+4. Wait for indexing to complete.
+5. Ask questions about the transcript.
+6. Expand **Sources used** to inspect the evidence behind the answer.
 
-## 3. Retrieval strategy: MMR
+## 🧠 Retrieval Strategy: Maximal Marginal Relevance (MMR)
 
-The application uses **Maximal Marginal Relevance (MMR)** retrieval with FAISS.
+This project uses **Maximal Marginal Relevance (MMR)** to select transcript chunks for answering questions.
 
-Traditional similarity search selects chunks based primarily on their semantic similarity to the question. MMR considers a wider set of candidates and balances relevance with diversity, helping reduce repetitive passages in the final context.
+Traditional similarity search prioritizes chunks most similar to the query. MMR also considers diversity, helping reduce redundant passages in the retrieved context.
 
-The current configuration in `src/rag_engine.py` is:
+The retrieval configuration in `src/rag_engine.py` uses:
 
 ```python
 retriever = vector_store.as_retriever(
@@ -123,132 +177,108 @@ retriever = vector_store.as_retriever(
 
 | Parameter | Purpose |
 |---|---|
-| `search_type="mmr"` | Enables MMR retrieval |
 | `k` | Number of final chunks returned |
-| `fetch_k` | Number of candidate chunks considered before selecting the final results |
-| `lambda_mult` | Balances relevance and diversity |
+| `fetch_k` | Number of candidate chunks considered |
+| `lambda_mult` | Balance between relevance and diversity |
 
-The default final chunk count is 4 when `build_rag_chain()` is called without a different value. The candidate pool is at least 20 chunks, and `lambda_mult=0.5` provides a balanced starting point.
+The default final chunk count is 4, the candidate pool is at least 20 chunks, and `lambda_mult=0.5` provides a balanced starting point.
 
-- Increase `lambda_mult` toward `1.0` to prioritize relevance.
-- Decrease it toward `0.0` to prioritize diversity.
-- Increase `k` when answers need context from more parts of a transcript, but remember that larger contexts can increase token usage and latency.
+MMR does not guarantee better answers for every question. Answer quality also depends on transcript quality, chunking, retrieval settings, and the language model.
 
-MMR does not guarantee better answers for every question. Evaluate it against similarity search using factual questions, broad summaries, exact terms, and questions whose answers are absent from the transcript.
+## 🐳 Run with Docker
 
-**Existing indexes:** Switching from similarity search to MMR does not require generating embeddings again, provided the existing FAISS index is compatible with the current transcript and embedding configuration.
+Ensure Docker Desktop is running and your `.env` file is configured.
 
-## 4. Docker
-
-Ensure Docker Desktop is running and create `.env` as described above.
-
-Build and start:
+Build and start the application:
 
 ```powershell
 docker compose up --build
 ```
 
-Open `http://localhost:8501`.
+Open:
 
-Stop:
+http://localhost:8501
+
+Stop the application:
 
 ```powershell
 docker compose down
 ```
 
-The Compose configuration mounts `./data` into the container, allowing locally generated indexes to persist across container restarts. To rebuild an index from scratch, stop the application and delete the relevant subfolder under `data/indexes`.
+The local Docker Compose configuration mounts the `data` directory into the container so generated indexes can persist across container restarts.
 
-Build and run without Compose:
+## ☁️ Deployment
 
-```powershell
-docker build -t youtube-rag-assistant:1.0.0 .
-docker run --rm -p 8501:8501 --env-file .env -v "${PWD}/data:/app/data" -e RAG_INDEX_DIR=/app/data/indexes youtube-rag-assistant:1.0.0
-```
+This application is deployed on **Render using Docker**.
 
-## 5. Push to GitHub
+- **Live application:** https://youtube-rag-assistant-p8he.onrender.com
+- **Source code:** https://github.com/Lakshya3000/youtube-rag-assistant
 
-Create an empty repository on GitHub, then run these commands from the project directory:
+The deployment uses environment variables configured in Render for the Gemini API key and model settings.
 
-```powershell
-git init
-git add .
-git status
-git commit -m "Add MMR retrieval to YouTube RAG assistant"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/youtube-rag-assistant.git
-git push -u origin main
-```
+### Deployment considerations
 
-Replace `YOUR_USERNAME` with your GitHub username. If the repository already exists locally, do not repeat `git init` or add another remote unnecessarily. Instead, stage and commit your changes:
+- Hosted services may have limited resources and may spin down when inactive.
+- Do not assume local FAISS index files will survive every restart or redeployment.
+- If the index is missing, the transcript may need to be indexed again, consuming Gemini embedding quota.
+- YouTube may block automatic transcript requests from cloud-hosting IP addresses.
+- Uploading or pasting a transcript is the available fallback when direct caption fetching fails.
 
-```powershell
-git add src/rag_engine.py README.md
-git status
-git commit -m "Add MMR retrieval and update documentation"
-git push
-```
+## 🔐 Environment Variables
 
-Before committing, inspect `git status` and ensure `.env` is not listed. Never commit API keys, private transcripts, or generated FAISS cache files.
+| Variable | Purpose |
+|---|---|
+| `GOOGLE_API_KEY` | Google Gemini API credential |
+| `GEMINI_API_KEY` | Alternative API-key name, if supported by the application |
+| `GEMINI_EMBEDDING_MODEL` | Gemini embedding model |
+| `GEMINI_CHAT_MODEL` | Gemini chat model |
+| `RAG_INDEX_DIR` | Directory used to store FAISS indexes |
 
-## 6. Deploy it live
+Keep API keys in environment variables or your hosting provider's secret settings. Never commit real credentials to GitHub.
 
-### Option A — Streamlit Community Cloud
+## ⚠️ Limitations
 
-1. Push the project to GitHub.
-2. Open Streamlit Community Cloud and create a new app from the repository.
-3. Set the main file path to `app.py` and deploy.
-4. Add `GOOGLE_API_KEY`, `GEMINI_EMBEDDING_MODEL`, and `GEMINI_CHAT_MODEL` in the app's Secrets/settings area using the host's supported format.
-5. Test with a small transcript first.
+- YouTube caption fetching can fail when requests are blocked or captions are unavailable.
+- Hosted filesystems may not preserve FAISS indexes across restarts or redeployments.
+- Gemini API quotas, latency, and availability depend on the selected model and account.
+- Generated answers are based on retrieved transcript passages and may not capture information missing from the transcript.
 
-Hosted filesystem storage may be ephemeral. If the app restarts or is redeployed, its local FAISS cache may disappear. Users can rebuild the index from the transcript. YouTube caption fetching may also be blocked on hosted infrastructure, so transcript upload is an important fallback.
+## 🔧 Troubleshooting
 
-### Option B — Docker host (for example, Render or another container platform)
+**YouTube transcript fetch fails**
 
-1. Create a web service from the GitHub repository and select Docker as the runtime.
-2. Set `GOOGLE_API_KEY` as a secret/environment variable. Set the model variables if needed.
-3. Configure the service to use the container's port `8501`, or its injected `PORT` environment variable if the application and container configuration support it.
-4. If persistent disks or volumes are supported, mount one at `/app/data` and set `RAG_INDEX_DIR=/app/data/indexes`.
-5. Deploy and test the public URL.
+Try uploading a transcript file or pasting transcript text instead.
 
-Free-tier instances may sleep, have resource limits, or lose local files on redeploy. Do not assume that a local FAISS index persists unless persistent storage is configured.
+**Gemini API key missing**
 
-## 7. Environment variables
+Verify that `GOOGLE_API_KEY` is configured in your local `.env` file or the Render environment settings.
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `GOOGLE_API_KEY` | — | Gemini API credential |
-| `GEMINI_API_KEY` | — | Alternative key name, if supported by the application |
-| `GEMINI_EMBEDDING_MODEL` | `gemini-embedding-001` | Text embedding model |
-| `GEMINI_CHAT_MODEL` | `gemini-3.5-flash-lite` | Chat generation model |
-| `RAG_INDEX_DIR` | `data/indexes` | Local FAISS cache directory |
+**Model not found**
 
-## 8. Security and production notes
+Configure `GEMINI_CHAT_MODEL` with a model currently available to your API account.
 
-- Store secrets in `.env` locally and in the hosting provider's secret manager in production. Never hard-code or commit them.
-- FAISS pickle deserialization is enabled for the application's local index cache. Never load untrusted index files.
-- Transcript content is sent to Gemini through embedding and answer-generation API calls. Avoid processing sensitive content unless you have permission and understand the provider's terms.
-- This project is suitable as a portfolio/demo deployment. For higher-traffic production use, consider authentication, request quotas, observability, persistent managed storage, and explicit data-retention controls.
-- API quotas and pricing are controlled by Google and can change. Smaller embedding batches help manage request pressure but do not bypass exhausted quotas.
-- MMR changes retrieval behavior, not the underlying embedding vectors. Answer quality still depends on transcript quality, chunking, retrieval settings, and the language model.
+**Quota error (`429 RESOURCE_EXHAUSTED`)**
 
-## 9. Troubleshooting
+Check your Google AI Studio quota and avoid repeatedly rebuilding an index when a compatible cached index is available.
 
-**`GOOGLE_API_KEY` missing**
+**FAISS index missing**
 
-Check the `.env` location and confirm it contains `GOOGLE_API_KEY=...`.
+Build the searchable index again from the transcript. Re-indexing may consume additional embedding quota.
 
-**Model not found (404)**
+## 🔒 Privacy and Security
 
-Set `GEMINI_CHAT_MODEL` to a model currently available to your API key, then restart the application.
+- Transcript text is sent to Gemini for embedding and answer generation.
+- Do not submit private transcripts unless you have permission to process them.
+- Never load untrusted FAISS pickle files.
+- For production use, consider authentication, rate limiting, persistent storage, monitoring, and data-retention controls.
 
-**Quota / `429 RESOURCE_EXHAUSTED`**
+## 👨‍💻 Author
 
-Check Google AI Studio/API limits and wait for quota reset or use a plan with sufficient quota. Avoid repeatedly rebuilding the same index.
+**Lakshya Pratap Singh**
 
-**YouTube `RequestBlocked`**
+- GitHub: https://github.com/Lakshya3000
 
-Hosted/cloud IPs can be blocked. Upload or paste a transcript instead.
+---
 
-**FAISS loads but retrieval seems wrong**
+⭐ If you find this project useful, consider giving the repository a star.
 
-Ensure the transcript, embedding model, and chunk settings match the intended index. The cache key changes when the transcript or indexing configuration changes
