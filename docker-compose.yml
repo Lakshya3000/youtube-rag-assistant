@@ -1,0 +1,15 @@
+
+services:
+  youtube-rag-assistant:
+    build: .
+    container_name: youtube-rag-assistant
+    ports:
+      - "8501:10000"
+    env_file:
+      - .env
+    environment:
+      PORT: "10000"
+      RAG_INDEX_DIR: /app/data/indexes
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
